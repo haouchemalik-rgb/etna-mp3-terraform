@@ -1,0 +1,231 @@
+
+# Documentation d'installation et d'utilisation de l'infrastructure et de l'environnement de développement
+
+Cette documentation vous guide pour installer et configurer Terraform, créer une infrastructure sur AWS, et gérer l’environnement de développement sur votre machine locale sous Linux, Windows ou macOS.
+
+---
+
+## 1. Installation de Terraform
+
+### 1.1. Prérequis
+
+- **Compte AWS** : Créez un compte sur [AWS](https://aws.amazon.com) et activez l’offre **Free Tier** pour bénéficier de services gratuits.
+- **AWS CLI** : Il est recommandé d'installer l'AWS CLI pour faciliter la configuration des clés d'accès et la gestion des services AWS.
+
+### 1.2. Installation de Terraform
+
+#### **Linux (Debian/Ubuntu)**
+
+1. **Téléchargez Terraform** :
+   ```bash
+   curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+   echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+   sudo apt update && sudo apt install terraform
+   ```
+
+2. **Vérifiez l’installation** :
+   ```bash
+   terraform -v
+   ```
+
+#### **macOS**
+
+1. Utilisez **Homebrew** pour installer Terraform :
+   ```bash
+   brew tap hashicorp/tap
+   brew install hashicorp/tap/terraform
+   ```
+
+2. Vérifiez l’installation :
+   ```bash
+   terraform -v
+   ```
+
+#### **Windows**
+
+1. Téléchargez le fichier ZIP correspondant à votre système d'exploitation sur le site officiel [Terraform Downloads](https://www.terraform.io/downloads).
+2. Extrayez l’archive téléchargée.
+3. Ajoutez le répertoire contenant `terraform.exe` à la variable d'environnement `PATH` dans les paramètres système.
+4. Vérifiez l’installation en utilisant PowerShell :
+   ```powershell
+   terraform -v
+   ```
+
+---
+
+## 2. Configuration de l'Environnement AWS
+
+### 2.1. Installation d'AWS CLI (Optionnel mais recommandé)
+
+L'**AWS CLI** est utilisée pour interagir avec AWS et gérer votre configuration locale.
+
+#### **Linux/macOS**
+
+1. Installez AWS CLI :
+   ```bash
+   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+   unzip awscliv2.zip
+   sudo ./aws/install
+   ```
+
+2. **Windows** : Téléchargez et exécutez le fichier d’installation [AWS CLI Windows](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html).
+
+3. **Configurer AWS CLI** :
+   Après avoir installé AWS CLI, configurez vos clés d’accès :
+   ```bash
+   aws configure
+   ```
+   Vous serez invité à entrer les informations suivantes :
+   - **AWS Access Key ID** (obtenue via IAM)
+   - **AWS Secret Access Key**
+   - **Région par défaut** (pour Paris, utilisez `eu-west-3`)
+   - **Format de sortie par défaut** (recommandé : `json`)
+
+### 2.2. Configuration des utilisateurs et des permissions IAM sur AWS
+
+1. **Accédez à la console IAM** sur AWS.
+2. **Créez un utilisateur** avec un accès programmatique (clés d'accès API).
+3. Attachez la politique **AdministratorAccess** à cet utilisateur.
+
+Vous obtiendrez une **clé d'accès** (Access Key ID) et une **clé secrète** (Secret Access Key) qui seront utilisées dans Terraform.
+
+---
+
+## 3. Configuration Terraform pour AWS
+
+### 3.1. Structure du Répertoire
+
+Dans votre projet, créez une structure comme suit :
+
+```bash
+/chemin/vers/votre/projet/
+├── terraform/
+│   ├── main.tf             # Fichier principal de configuration Terraform
+│   ├── variables.tf        # Déclaration des variables Terraform
+│   ├── terraform.tfvars    # Fichier contenant les valeurs sensibles comme les clés AWS
+│   └── .gitignore          # Pour ne pas versionner terraform.tfvars
+```
+
+### 3.2. Fichier `main.tf`
+
+Le fichier `main.tf` contient la configuration principale pour interagir avec AWS et gérer les ressources.
+
+Exemple de fichier `main.tf` :
+
+```hcl
+provider "aws" {
+  region     = "eu-west-3"  # Région Paris
+  access_key = var.AWS_ACCESS_KEY_ID  # Référence à la variable pour la clé d'accès
+  secret_key = var.AWS_SECRET_ACCESS_KEY  # Référence à la variable pour la clé secrète
+}
+
+# Exemple de création d'une instance EC2
+resource "aws_instance" "example" {
+  ami           = "ami-0c55b159cbfafe1f0"  # AMI Linux pour Paris
+  instance_type = "t2.micro"               # Instance gratuite
+}
+```
+
+### 3.3. Fichier `variables.tf`
+
+Le fichier `variables.tf` permet de déclarer des variables utilisées dans `main.tf`. Cela évite de coder en dur les valeurs sensibles.
+
+Exemple de fichier `variables.tf` :
+
+```hcl
+variable "AWS_ACCESS_KEY_ID" {
+  description = "Clé d'accès AWS"
+}
+
+variable "AWS_SECRET_ACCESS_KEY" {
+  description = "Clé secrète AWS"
+}
+```
+
+### 3.4. Fichier `terraform.tfvars`
+
+Ce fichier contient les valeurs spécifiques de vos variables. **Ne versionnez jamais ce fichier**. Ajoutez-le à votre `.gitignore`.
+
+Exemple de fichier `terraform.tfvars` :
+
+```hcl
+AWS_ACCESS_KEY_ID     = "votre_access_key_id"
+AWS_SECRET_ACCESS_KEY = "votre_secret_access_key"
+```
+
+### 3.5. Fichier `.gitignore`
+
+Il est essentiel de ne pas versionner les fichiers contenant des informations sensibles, comme `terraform.tfvars`.
+
+Exemple de `.gitignore` :
+
+```
+terraform.tfvars
+```
+
+---
+
+## 4. Utilisation de Terraform
+
+Une fois votre environnement configuré, vous pouvez exécuter les commandes suivantes pour gérer votre infrastructure.
+
+### 4.1. Initialisation du Projet
+
+Initialisez le projet Terraform pour télécharger les providers et préparer l’exécution :
+
+```bash
+terraform init
+```
+
+### 4.2. Planification des Changements
+
+Affichez un plan des actions que Terraform va effectuer (créer/modifier/supprimer des ressources) :
+
+```bash
+terraform plan
+```
+
+### 4.3. Appliquer les Changements
+
+Appliquez les changements planifiés pour provisionner l'infrastructure sur AWS :
+
+```bash
+terraform apply
+```
+
+Il vous sera demandé de confirmer les actions en tapant `yes`.
+
+### 4.4. Détruire l'Infrastructure
+
+Pour supprimer toutes les ressources créées par Terraform, exécutez la commande suivante :
+
+```bash
+terraform destroy
+```
+
+---
+
+## 5. Sécurisation des Clés AWS
+
+### Option 1: Utilisation des Variables d’Environnement
+
+Une méthode pour ne pas écrire vos clés dans des fichiers est d’utiliser des variables d'environnement. Vous pouvez définir ces variables dans votre terminal avant d’exécuter Terraform :
+
+```bash
+export AWS_ACCESS_KEY_ID="votre_access_key_id"
+export AWS_SECRET_ACCESS_KEY="votre_secret_access_key"
+```
+
+Cela permet à Terraform de récupérer les clés sans qu’elles soient présentes dans un fichier.
+
+### Option 2: Fichier `terraform.tfvars`
+
+Si vous utilisez le fichier `terraform.tfvars`, assurez-vous de bien l’ajouter au `.gitignore` pour ne pas versionner vos informations sensibles.
+
+---
+
+## 6. Conclusion
+
+Cette documentation vous a guidé à travers l’installation et la configuration de Terraform pour interagir avec AWS. Elle inclut les bonnes pratiques de sécurité pour protéger vos clés d’accès et fournit un exemple simple d’infrastructure avec une instance EC2.
+
+En suivant ces étapes, vous serez en mesure de déployer, gérer et supprimer des ressources dans AWS en toute sécurité via Terraform.
