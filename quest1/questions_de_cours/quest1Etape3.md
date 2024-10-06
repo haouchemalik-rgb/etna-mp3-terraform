@@ -1,0 +1,7 @@
+1 - Qu'est-ce qu'une clé SSH et pourquoi est-elle utilisée ? Une clé SSH est un couple de clés cryptographiques (une clé publique et une clé privée) utilisé pour sécuriser l'accès aux systèmes distants. La clé publique est installée sur le serveur, et la clé privée est conservée par l'utilisateur, lui permettant d'établir une connexion sécurisée et authentifiée sans nécessiter de mot de passe.
+
+2 - À quoi sert le aws_security_group ? Le aws_security_group agit comme un pare-feu virtuel pour les instances AWS, définissant des règles de trafic entrant et sortant. Il permet de spécifier quels ports et protocoles sont accessibles, offrant ainsi un contrôle de sécurité autour des instances.
+
+3 - Qu'est-ce qu'un root_block_device ? Un root_block_device est le volume de stockage principal attaché à une instance AWS EC2. Il contient le système d'exploitation et d'autres fichiers essentiels. Dans cette configuration, il est configuré pour une taille de 8 Go, de type SSD gp2, et est supprimé lors de la terminaison de l'instance.
+
+4 - À quoi servent les blocs de type output ? Les blocs de type output dans Terraform sont utilisés pour afficher des informations à l'utilisateur après l'exécution du plan. Par exemple, ils peuvent être utilisés pour afficher l'adresse IP publique d'une instance une fois celle-ci déployée.
