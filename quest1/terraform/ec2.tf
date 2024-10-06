@@ -1,7 +1,7 @@
 # Instance EC2 pour le déploiement de la clé ssh
 resource "aws_key_pair" "deploy" {
   key_name   = "deploy_key"
-  public_key = file("~/.ssh/deploy_idrsa.pub")
+  public_key = file("deploy_idrsa.pub")
 }
 
 # Instance EC2 pour le groupe de sécurité
@@ -56,7 +56,7 @@ resource "aws_instance" "reverse_proxy" {
 # Interface réseau pour backend1
 resource "aws_network_interface" "backend1_nic" {
   subnet_id       = aws_subnet.internal.id
-  private_ips     = ["192.168.1.11"]  # Adresse IP privée pour backend1
+  private_ips     = ["192.168.1.20"]  # Adresse IP privée pour backend1
   security_groups = [aws_security_group.allow_all.id]
   tags = {
     Name = "backend1_nic"
@@ -84,7 +84,7 @@ resource "aws_instance" "backend1" {
 # Interface réseau pour backend2
 resource "aws_network_interface" "backend2_nic" {
   subnet_id       = aws_subnet.internal.id
-  private_ips     = ["192.168.1.12"]  # Adresse IP privée pour backend2
+  private_ips     = ["192.168.1.30"]  # Adresse IP privée pour backend2
   security_groups = [aws_security_group.allow_all.id]
   tags = {
     Name = "backend2_nic"
@@ -112,7 +112,7 @@ resource "aws_instance" "backend2" {
 # Interface réseau pour database
 resource "aws_network_interface" "database_nic" {
   subnet_id       = aws_subnet.internal.id
-  private_ips     = ["192.168.1.13"]  # Adresse IP privée pour database
+  private_ips     = ["192.168.1.40"]  # Adresse IP privée pour database
   security_groups = [aws_security_group.allow_all.id]
   tags = {
     Name = "database_nic"
