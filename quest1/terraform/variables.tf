@@ -8,3 +8,8 @@ variable "aws_secret_key" {
     type        = string
     sensitive   = true
 }
+variable "filePath" {
+    description = "Chemin de la clé ssh"
+    type = string
+    sensitive = true
+}

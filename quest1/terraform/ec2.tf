@@ -1,7 +1,7 @@
 # Instance EC2 pour le déploiement de la clé ssh
-resource "aws_key_pair" "deploy" {
-  key_name   = "deploy_key"
-  public_key = file("deploy_idrsa.pub")
+resource "aws_key_pair" "deploy_key" {
+  key_name   = "id_rsa.pub"
+  public_key = file(var.filePath)
 }
 
 # Instance EC2 pour le groupe de sécurité
@@ -12,14 +12,14 @@ resource "aws_security_group" "allow_all" {
   
   ingress {
     from_port   = 0
-    to_port     = 65535
+    to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
   
   egress {
     from_port   = 0
-    to_port     = 65535
+    to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
