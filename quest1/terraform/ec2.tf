@@ -1,6 +1,6 @@
 # Instance EC2 pour le déploiement de la clé ssh
 resource "aws_key_pair" "deploy_key" {
-  key_name   = "id_rsa.pub"
+  key_name   = "deploy_key"
   public_key = file(var.filePath)
 }
 
