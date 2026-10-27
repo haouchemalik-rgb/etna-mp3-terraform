@@ -54,15 +54,59 @@ resource "aws_network_acl" "acl" {
 }
 
 # Création des règles pour l'ACL
+# La NACL est sans état : il faut autoriser explicitement les réponses
+# (ports éphémères) en plus des services exposés.
 resource "aws_network_acl_rule" "allow_ssh_inbound" {
   network_acl_id = aws_network_acl.acl.id
-  rule_number     = 100
-  egress          = false
-  protocol        = "tcp"
-  rule_action     = "allow"
-  cidr_block      = "0.0.0.0/0"
-  from_port       = 22
-  to_port         = 22
+  rule_number    = 100
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = var.admin_cidr
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "allow_http_inbound" {
+  network_acl_id = aws_network_acl.acl.id
+  rule_number    = 110
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
+resource "aws_network_acl_rule" "allow_https_inbound" {
+  network_acl_id = aws_network_acl.acl.id
+  rule_number    = 120
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 443
+  to_port        = 443
+}
+
+resource "aws_network_acl_rule" "allow_vpc_inbound" {
+  network_acl_id = aws_network_acl.acl.id
+  rule_number    = 130
+  egress         = false
+  protocol       = "-1"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.main.cidr_block
+}
+
+resource "aws_network_acl_rule" "allow_ephemeral_inbound" {
+  network_acl_id = aws_network_acl.acl.id
+  rule_number    = 140
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 1024
+  to_port        = 65535
 }
 
 resource "aws_network_acl_rule" "allow_all_outbound" {
@@ -78,4 +122,4 @@ resource "aws_network_acl_rule" "allow_all_outbound" {
 resource "aws_network_acl_association" "acl_assoc" {
   subnet_id      = aws_subnet.internal.id
   network_acl_id = aws_network_acl.acl.id
-}
+}

@@ -26,30 +26,37 @@ Provisionnement d'une architecture 3-tiers sur **AWS (région Paris, eu-west-3)*
 |---|---|
 | [`quest1/terraform/main.tf`](quest1/terraform/main.tf) | Provider AWS et contraintes de version |
 | [`quest1/terraform/vpc.tf`](quest1/terraform/vpc.tf) | VPC, Internet Gateway, sous-réseau, table de routage, Network ACL |
-| [`quest1/terraform/ec2.tf`](quest1/terraform/ec2.tf) | Clé SSH, Security Group, interfaces réseau et 4 instances EC2 |
-| [`quest1/terraform/variables.tf`](quest1/terraform/variables.tf) | Variables (identifiants AWS, chemin de la clé publique) |
+| [`quest1/terraform/ec2.tf`](quest1/terraform/ec2.tf) | Clé SSH, 3 groupes de sécurité par rôle, interfaces réseau et 4 instances EC2 |
+| [`quest1/terraform/variables.tf`](quest1/terraform/variables.tf) | Variables (profil AWS, clé SSH, IP d'administration, ports) |
 | [`quest1/documentation/`](quest1/documentation/) | Guide d'installation (Linux / macOS / Windows) et schéma d'architecture |
 | [`quest1/questions_de_cours/`](quest1/questions_de_cours/) | Réponses aux questions théoriques (IaC, VPC, ACL, Security Groups…) |
+
+## Sécurité réseau
+
+Un groupe de sécurité par rôle, sur le principe du moindre privilège :
+
+| Groupe | Entrant autorisé |
+|---|---|
+| `sg_reverse_proxy` | 80 / 443 depuis Internet · 22 depuis `admin_cidr` uniquement |
+| `sg_backend` | port applicatif et SSH **depuis le reverse proxy uniquement** (bastion) |
+| `sg_database` | port SGBD depuis les backends · SSH depuis le bastion |
+
+La Network ACL du sous-réseau (sans état) n'ouvre que SSH depuis `admin_cidr`, HTTP/HTTPS, le trafic interne au VPC et les ports éphémères de retour. Une règle de validation refuse `admin_cidr = 0.0.0.0/0`.
 
 ## Utilisation
 
 ```bash
+aws configure --profile etna              # identifiants stockés par l'AWS CLI, hors du dépôt
 cd quest1/terraform
-cat > terraform.tfvars <<EOF
-aws_access_key = "..."
-aws_secret_key = "..."
-EOF
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var aws_profile=etna -var filePath=~/.ssh/deploy.pub -var admin_cidr=$(curl -s https://checkip.amazonaws.com)/32
+terraform apply -var aws_profile=etna -var filePath=~/.ssh/deploy.pub -var admin_cidr=$(curl -s https://checkip.amazonaws.com)/32
 ```
 
-Les identifiants AWS sont passés par variables (`terraform.tfvars`, exclu du dépôt) et ne sont jamais versionnés ; l'état Terraform (`.tfstate`) est également ignoré.
+Aucune clé AWS ne passe par Terraform (chaîne d'identifiants standard : profil CLI, variables d'environnement ou rôle IAM). L'état Terraform (`.tfstate`) et les fichiers `*.tfvars` sont exclus du dépôt.
 
-## Limites connues et améliorations prévues
+## Améliorations possibles
 
-Ce projet répondait à un sujet pédagogique centré sur le provisionnement. Pour une mise en production, je durcirais :
-
-- **Security Group** : remplacer la règle « tout le trafic » par des règles minimales (443 vers le reverse proxy, ports applicatifs uniquement depuis le proxy, port BDD uniquement depuis les backends, SSH depuis une IP d'administration ou un bastion).
-- **Segmentation** : sous-réseau public pour le reverse proxy, sous-réseaux privés + NAT Gateway pour les backends et la base.
-- **Identifiants** : profil AWS CLI ou rôle IAM plutôt que des clés passées en variables ; backend d'état distant (S3 + verrouillage DynamoDB).
+- **Segmentation** : sous-réseau public pour le reverse proxy, sous-réseaux privés + NAT Gateway pour les backends et la base (aujourd'hui un seul sous-réseau, filtré par groupes de sécurité).
+- **État distant** : backend S3 chiffré avec verrouillage DynamoDB pour le travail en équipe.
+- **Accès d'administration** : AWS Systems Manager Session Manager à la place du bastion SSH.

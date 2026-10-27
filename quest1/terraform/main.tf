@@ -10,6 +10,7 @@ terraform {
 
 provider "aws" {
   region = "eu-west-3"
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  # Identifiants issus de la chaîne standard AWS (profil CLI, variables
+  # d'environnement ou rôle IAM) : aucune clé ne transite par Terraform.
+  profile = var.aws_profile
 }

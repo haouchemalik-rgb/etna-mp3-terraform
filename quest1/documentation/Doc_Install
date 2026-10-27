@@ -93,6 +93,8 @@ Vous obtiendrez une **clé d'accès** (Access Key ID) et une **clé secrète** (
 
 ## 3. Configuration Terraform pour AWS
 
+> **Mise à jour :** cette section décrit la version rendue du projet, où les clés AWS étaient passées par `terraform.tfvars`. Le code actuel n'utilise plus de clés dans Terraform : il s'appuie sur un profil AWS CLI (`aws configure --profile …`, variable `aws_profile`), ce qui évite tout risque de fuite via un fichier de variables. Voir le README du dépôt.
+
 ### 3.1. Structure du Répertoire
 
 Dans votre projet, créez une structure comme suit :
